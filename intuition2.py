@@ -7,6 +7,7 @@ label_encoder = preprocessing.LabelEncoder()
 
 train_data = load_train_data()
 test_data = load_test_data()
+test_nulls = test_data.isna().sum()
 means = train_data.mean()
 
 
@@ -34,7 +35,7 @@ kitchen_qual = {'Ex':4,'Gd':3,'TA':2,'Fa':1,'Po':0 }
 functional = {'Typ':7,'Min1':6,'Min2':5,'Mod':4,'Maj1':3,'Maj2':2,'Sev':1,'Sal':0}
 
 fireplace_qu = {'Ex':5,'Gd':4,'TA':3,'Fa':2,'Po':1,np.nan:0}
-garage_type =  {'2Types':6,'Attchd':5,'Basement':4,'BuiltIn':3,'CarPort':2,'Detchd':1,np.nan:0}
+# garage_type =  {'2Types':6,'Attchd':5,'Basement':4,'BuiltIn':3,'CarPort':2,'Detchd':1,np.nan:0}
 garage_finish = {'Fin':3,'RFn':2,'Unf':1,np.nan:0 }
 garage_qual = {'Ex':5,'Gd':4,'TA':3,'Fa':2,'Po':1,np.nan:0}
 garage_cond = {'Ex':5,'Gd':4,'TA':3,'Fa':2,'Po':1,np.nan:0}
@@ -44,7 +45,8 @@ paved = {'Y':3,'P':2,'N':1}
 def encoding(train_data):
     train_data['BldgType'] = label_encoder.fit_transform(train_data['BldgType'])
     train_data['HouseStyle'] = label_encoder.fit_transform(train_data['HouseStyle'])
-    
+    train_data['GarageType'] = train_data['GarageType'].fillna(train_data['GarageType'].mode()[0])
+    train_data['GarageType'] = label_encoder.fit_transform(train_data['GarageType'])
     train_data['LotFrontage'] = train_data['LotFrontage'].fillna(train_data['LotFrontage'].mean())
     train_data['MasVnrArea'] = train_data['MasVnrArea'].fillna(train_data['MasVnrArea'].mean())
 
@@ -65,7 +67,7 @@ def encoding(train_data):
     train_data.KitchenQual = train_data.KitchenQual.replace(kitchen_qual)
     train_data.Functional = train_data.Functional.replace(functional)
     train_data.FireplaceQu = train_data.FireplaceQu.replace(fireplace_qu)
-    train_data.GarageType = train_data.GarageType.replace(garage_type)
+    # train_data.GarageType = train_data.GarageType.replace(garage_type)
     train_data.GarageFinish= train_data.GarageFinish.replace(garage_finish)
     train_data.GarageQual = train_data.GarageQual.replace(garage_qual)
     train_data.GarageCond = train_data.GarageCond.replace(garage_cond)
@@ -104,41 +106,85 @@ def encoding(train_data):
 
 train_data2 = encoding(train_data)
 test_data2 = encoding(test_data)
+for column in test_data2.columns:
+    test_data2[column] = test_data2[column].fillna(test_data2[column].mode()[0])
 
+nulls_test = test_data2.isna().sum()
 nulls = train_data2.isna().sum()
+
+
 #object data only
 obj_data = train_data2.select_dtypes(include=['object'])
-
+obj_data_counts = obj_data.nunique()
 #numerical data only
 train_data3 = train_data2.select_dtypes(exclude=['object'])
 
-
-from sklearn.preprocessing import OneHotEncoder
-enc = OneHotEncoder(drop='first')
-enc_df2 = pd.DataFrame(enc.fit_transform(obj_data.astype(str)).toarray())
-
-dfs = [enc_df2,train_data3]
-training = pd.concat([enc_df2,train_data3],axis=1)
+train_en = pd.get_dummies(obj_data)
+dfs = [train_en,train_data3]
 
 
+transformed = train_data3['SalePrice']
+train_data3['SalePrice'] = np.log(transformed)
+y = train_data3['SalePrice']
+train_data3 = train_data3.drop(['SalePrice'],axis =1)
+
+#testing data
+test_obj_data = test_data2.select_dtypes(include=['object'])
+test_data3 = test_data2.select_dtypes(exclude=['object'])
+test_object_counts = test_obj_data.nunique()
+
+test_en = pd.get_dummies(test_obj_data)
+test_dfs = [test_en,test_data3]
+
+#align the encoded data
+train_en, test_en = train_en.align(test_en, join='inner', axis=1)
+
+training = pd.concat([train_en,train_data3],axis=1)
+testing = pd.concat([test_en,test_data3],axis=1)
+training_arr = training.iloc[:,:].values
+testing_arr = testing.iloc[:,:].values
 
 
 
+from sklearn.linear_model import LinearRegression
+regressor = LinearRegression()
+regressor.fit(training_arr, y)
+regressor.score(training_arr,y)
+
+reg_pred = regressor.predict(testing_arr)
+reg_pred = np.exp(reg_pred)
+reg_pred = pd.DataFrame(reg_pred)
+
+reg_pred.to_csv('prediction.csv')
 
 
+import xgboost as xg
+xgb_r = xg.XGBRegressor(objective ='reg:linear',
+                  n_estimators = 10, seed = 123)
+xgb_r.fit(training_arr, y)
+xg_pred = xgb_r.predict(testing_arr)
+xg_pred = np.exp(xg_pred)
+xg_pred = pd.DataFrame(xg_pred)
+xg_pred.to_csv('xg_prediction.csv')
+
+from sklearn.linear_model import ElasticNet
+el = ElasticNet(random_state=0)
+el.fit(training_arr, y)
+
+el_pred = el.predict(testing_arr)
+el_pred = np.exp(el_pred);
+el_pred = pd.DataFrame(el_pred)
+el_pred.to_csv('el_prediction.csv')
 
 
+from sklearn.ensemble import RandomForestRegressor
+rf = RandomForestRegressor(max_depth=2, random_state=0)
+rf.fit(training_arr,y)
 
-
-
-
-
-
-
-
-
-
-
+rf_pred = rf.predict(testing_arr)
+rf_pred = np.exp(rf_pred)
+rf_pred = pd.DataFrame(rf_pred)
+rf_pred.to_csv('rf_prediction.csv')
 
 
 
