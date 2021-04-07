@@ -2,38 +2,51 @@
 
 from utility import *
 import numpy as np
-train_data = load_train_data()
-
+# train_data = load_train_data()
+import pandas as pd
 
 def replace_labels(col_name,d):
     train_data[col_name] = train_data[col_name].replace(d)
 
+from sklearn import preprocessing
+label_encoder = preprocessing.LabelEncoder()
+
 
 class preprocessing_data:
     
-    def __init__(self):
-        self.train_data = train_data
+    # def __init__(self):
+    #     self.train_data = train_data
         
         
     
-    def fill_null_values(self):
+    def fill_null_values(train_data):
         
-        self.train_data = self.train_data.fillna(self.train_data['LotFrontage'].mean())
-
-        return self.train_data
+        train_data['MasVnrType'] = train_data['MasVnrType'].fillna(train_data['MasVnrType'].mode()[0])
+        train_data['Electrical'] = train_data['Electrical'].fillna(train_data['Electrical'].mode()[0])
+        train_data['GarageYrBlt'] = train_data['GarageYrBlt'].fillna(train_data['GarageYrBlt'].mode()[0])
+        
+        for column in train_data.columns:
+            train_data[column] = train_data[column].fillna(train_data[column].mode()[0])
+        
+        return train_data
     
-    def one_hot_encode(self):
+    def one_hot_encode(train_data):
         
         # train_data['GarageFinish'] = pd.get_dummies(train_data.GarageFinish, prefix='GarageFinish_',drop_first=True)
+        # obj_data = train_data.select_dtypes(include=['object'])
+        # num_data = train_data.select_dtypes(exclude=['object'])
+        train_en = pd.get_dummies(train_data)
+        # dfs = [train_en,num_data]
         
-        
-        
-        print(self.train_data)
-        return 0
+        # train_data = pd.concat([train_en,num_data],axis=1)
+        # 
+        print(train_en.info())
+        return train_en
     
-    def label_encode(self):
+     
+    
+    def encoding(train_data):
         
-        #LotShape
         lotshape_map = {'Reg':4,'IR1':3,'IR2':2,'IR3':1}
         land_contour = {'Low':4,'HLS':3,'Bnk':2,'Lvl':1}
         land_slope = {'Gtl':1,'Mod':2,'Sev':3}
@@ -58,55 +71,79 @@ class preprocessing_data:
         functional = {'Typ':7,'Min1':6,'Min2':5,'Mod':4,'Maj1':3,'Maj2':2,'Sev':1,'Sal':0}
         
         fireplace_qu = {'Ex':5,'Gd':4,'TA':3,'Fa':2,'Po':1,np.nan:0}
-        
-        # garage_type =  {'2Types':6,'Attchd':5,'Basement':4,'BuiltIn':3,'CarPort':2,'Detchd':1,'NA':0}
+        # garage_type =  {'2Types':6,'Attchd':5,'Basement':4,'BuiltIn':3,'CarPort':2,'Detchd':1,np.nan:0}
+        garage_finish = {'Fin':3,'RFn':2,'Unf':1,np.nan:0 }
         garage_qual = {'Ex':5,'Gd':4,'TA':3,'Fa':2,'Po':1,np.nan:0}
         garage_cond = {'Ex':5,'Gd':4,'TA':3,'Fa':2,'Po':1,np.nan:0}
         paved = {'Y':3,'P':2,'N':1}
         
-        
-        # self.train_data['BsmtCond'] = self.train_data['BsmtCond'].replace(bsmt_cond)
-        self.train_data.LotShape = self.train_data.LotShape.replace(lotshape_map)
-        self.train_data.LandContour = self.train_data.LandContour.replace(land_contour)
-        self.train_data.LandSlope = self.train_data.LandSlope.replace(land_slope)
-        self.train_data.Condition1 = self.train_data.Condition1.replace(condition1)
-        self.train_data.Condition2 = self.train_data.Condition2.replace(condition2)
-        self.train_data.ExterQual = self.train_data.ExterQual.replace(exter_qual)
-        self.train_data.ExterCond = self.train_data.ExterCond.replace(exter_cond)
-        self.train_data.BsmtQual = self.train_data.BsmtQual.replace(bsmt_qual)
-        self.train_data.BsmtCond = self.train_data.BsmtCond.replace(bsmt_cond)
-        self.train_data.BsmtExposure = self.train_data.BsmtExposure.replace(bsmt_exposure)
-        self.train_data.BsmtFinType1 = self.train_data.BsmtFinType1.replace(bsmt_finType1)
-        self.train_data.BsmtFinType2 = self.train_data.BsmtFinType2.replace(bsmt_finType2)
-        self.train_data.HeatingQC = self.train_data.HeatingQC.replace(heating_QC)
-        self.train_data.Electrical = self.train_data.Electrical.replace(electrical)
-        self.train_data.KitchenQual = self.train_data.KitchenQual.replace(kitchen_qual)
-        self.train_data.Functional = self.train_data.Functional.replace(functional)
-        self.train_data.FireplaceQu = self.train_data.FireplaceQu.replace(fireplace_qu)
-        self.train_data.GarageQual = self.train_data.GarageQual.replace(garage_qual)
-        self.train_data.GarageCond = self.train_data.GarageCond.replace(garage_cond)
-        self.train_data.PavedDrive = self.train_data.PavedDrive.replace(paved)
-            
-        
-        return self.train_data
+        train_data['BldgType'] = label_encoder.fit_transform(train_data['BldgType'])
+        train_data['HouseStyle'] = label_encoder.fit_transform(train_data['HouseStyle'])
+        train_data['GarageType'] = train_data['GarageType'].fillna(train_data['GarageType'].mode()[0])
+        train_data['GarageType'] = label_encoder.fit_transform(train_data['GarageType'])
+        train_data['LotFrontage'] = train_data['LotFrontage'].fillna(train_data['LotFrontage'].mean())
+        train_data['MasVnrArea'] = train_data['MasVnrArea'].fillna(train_data['MasVnrArea'].mean())
     
-    def top_k_hot_encode(self):
+        train_data.LotShape = train_data.LotShape.replace(lotshape_map)
+        train_data.LandContour = train_data.LandContour.replace(land_contour)
+        train_data.LandSlope = train_data.LandSlope.replace(land_slope)
+        train_data.Condition1 = train_data.Condition1.replace(condition1)
+        train_data.Condition2 = train_data.Condition2.replace(condition2)
+        train_data.ExterQual = train_data.ExterQual.replace(exter_qual)
+        train_data.ExterCond = train_data.ExterCond.replace(exter_cond)
+        train_data.BsmtQual = train_data.BsmtQual.replace(bsmt_qual)
+        train_data.BsmtCond = train_data.BsmtCond.replace(bsmt_cond)
+        train_data.BsmtExposure = train_data.BsmtExposure.replace(bsmt_exposure)
+        train_data.BsmtFinType1 = train_data.BsmtFinType1.replace(bsmt_finType1)
+        train_data.BsmtFinType2 = train_data.BsmtFinType2.replace(bsmt_finType2)
+        train_data.HeatingQC = train_data.HeatingQC.replace(heating_QC)
+        train_data.Electrical = train_data.Electrical.replace(electrical)
+        train_data.KitchenQual = train_data.KitchenQual.replace(kitchen_qual)
+        train_data.Functional = train_data.Functional.replace(functional)
+        train_data.FireplaceQu = train_data.FireplaceQu.replace(fireplace_qu)
+        # train_data.GarageType = train_data.GarageType.replace(garage_type)
+        train_data.GarageFinish= train_data.GarageFinish.replace(garage_finish)
+        train_data.GarageQual = train_data.GarageQual.replace(garage_qual)
+        train_data.GarageCond = train_data.GarageCond.replace(garage_cond)
+        train_data.PavedDrive = train_data.PavedDrive.replace(paved)
         
-        top_neighbors = self.train_data.Neighborhood.value_counts().sort_values(ascending=False).head(10).index
-        top_ext1 = self.train_data.Exterior1st.value_counts().sort_values(ascending=False).head(6).index
-        top_ext2 = self.train_data.Exterior2nd.value_counts().sort_values(ascending=False).head(6).index
+        train_data.drop(['Alley','PoolQC','Fence','MiscFeature'], axis = 1,inplace = True)
+        
+        
+        top_neighbors = train_data.Neighborhood.value_counts().sort_values(ascending=False).head(10).index
+        top_ext1 = train_data.Exterior1st.value_counts().sort_values(ascending=False).head(6).index
+        top_ext2 = train_data.Exterior2nd.value_counts().sort_values(ascending=False).head(6).index
             
         for n in top_neighbors:
-            self.train_data['neighborhood_'+ n] = np.where(self.train_data['Neighborhood']== n, 1, 0)
+            train_data['neighborhood_'+ n] = np.where(train_data['Neighborhood']== n, 1, 0)
         
         for n in top_ext1:
-            self.train_data['top_ext1_'+ n] = np.where(self.train_data['Exterior1st']== n, 1, 0)
+            train_data['top_ext1_'+ n] = np.where(train_data['Exterior1st']== n, 1, 0)
         
         for n in top_ext2:
-            self.train_data['top_ext2_'+ n] = np.where(self.train_data['Exterior2nd']== n, 1, 0)
-        self.train_data = self.train_data.drop(['Neighborhood'],axis=1)
-        self.train_data = self.train_data.drop(['Exterior1st'],axis=1)
-        self.train_data = self.train_data.drop(['Exterior2nd'],axis=1)
+            train_data['top_ext2_'+ n] = np.where(train_data['Exterior2nd']== n, 1, 0)
+        train_data = train_data.drop(['Neighborhood'],axis=1)
+        train_data = train_data.drop(['Exterior1st'],axis=1)
+        train_data = train_data.drop(['Exterior2nd'],axis=1)
+        
+        return train_data
+    def top_k_hot_encode(self):
+        
+        # top_neighbors = self.train_data.Neighborhood.value_counts().sort_values(ascending=False).head(10).index
+        # top_ext1 = self.train_data.Exterior1st.value_counts().sort_values(ascending=False).head(6).index
+        # top_ext2 = self.train_data.Exterior2nd.value_counts().sort_values(ascending=False).head(6).index
+            
+        # for n in top_neighbors:
+        #     self.train_data['neighborhood_'+ n] = np.where(self.train_data['Neighborhood']== n, 1, 0)
+        
+        # for n in top_ext1:
+        #     self.train_data['top_ext1_'+ n] = np.where(self.train_data['Exterior1st']== n, 1, 0)
+        
+        # for n in top_ext2:
+        #     self.train_data['top_ext2_'+ n] = np.where(self.train_data['Exterior2nd']== n, 1, 0)
+        # self.train_data = self.train_data.drop(['Neighborhood'],axis=1)
+        # self.train_data = self.train_data.drop(['Exterior1st'],axis=1)
+        # self.train_data = self.train_data.drop(['Exterior2nd'],axis=1)
         return 0
     
     def log_transform(self):
@@ -116,10 +153,12 @@ class preprocessing_data:
          
         return 0
     
-    def drop_col(self,col_name):
+    def drop_col(train_data,col_name):
         print(col_name)
-        self.train_data = self.train_data.drop([col_name],axis=1)
-        return self.train_data
+        for col in col_name:
+            
+            train_data = train_data.drop([col],axis=1)
+        return train_data
     
     def data_info(self):
         print(self.train_data.info())
