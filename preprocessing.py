@@ -5,20 +5,15 @@ import numpy as np
 # train_data = load_train_data()
 import pandas as pd
 
-def replace_labels(col_name,d):
-    train_data[col_name] = train_data[col_name].replace(d)
+# def replace_labels(col_name,d):
+#     train_data[col_name] = train_data[col_name].replace(d)
 
 from sklearn import preprocessing
 label_encoder = preprocessing.LabelEncoder()
 
 
 class preprocessing_data:
-    
-    # def __init__(self):
-    #     self.train_data = train_data
-        
-        
-    
+
     def fill_null_values(train_data):
         
         train_data['MasVnrType'] = train_data['MasVnrType'].fillna(train_data['MasVnrType'].mode()[0])
@@ -107,7 +102,7 @@ class preprocessing_data:
         train_data.GarageCond = train_data.GarageCond.replace(garage_cond)
         train_data.PavedDrive = train_data.PavedDrive.replace(paved)
         
-        train_data.drop(['Alley','PoolQC','Fence','MiscFeature'], axis = 1,inplace = True)
+        # train_data.drop(['Alley','PoolQC','Fence','MiscFeature'], axis = 1,inplace = True)
         
         
         top_neighbors = train_data.Neighborhood.value_counts().sort_values(ascending=False).head(10).index
@@ -127,31 +122,7 @@ class preprocessing_data:
         train_data = train_data.drop(['Exterior2nd'],axis=1)
         
         return train_data
-    def top_k_hot_encode(self):
-        
-        # top_neighbors = self.train_data.Neighborhood.value_counts().sort_values(ascending=False).head(10).index
-        # top_ext1 = self.train_data.Exterior1st.value_counts().sort_values(ascending=False).head(6).index
-        # top_ext2 = self.train_data.Exterior2nd.value_counts().sort_values(ascending=False).head(6).index
-            
-        # for n in top_neighbors:
-        #     self.train_data['neighborhood_'+ n] = np.where(self.train_data['Neighborhood']== n, 1, 0)
-        
-        # for n in top_ext1:
-        #     self.train_data['top_ext1_'+ n] = np.where(self.train_data['Exterior1st']== n, 1, 0)
-        
-        # for n in top_ext2:
-        #     self.train_data['top_ext2_'+ n] = np.where(self.train_data['Exterior2nd']== n, 1, 0)
-        # self.train_data = self.train_data.drop(['Neighborhood'],axis=1)
-        # self.train_data = self.train_data.drop(['Exterior1st'],axis=1)
-        # self.train_data = self.train_data.drop(['Exterior2nd'],axis=1)
-        return 0
-    
-    def log_transform(self):
-        
-        transformed = self.train_data['SalePrice']
-        self.train_data['SalePrice'] = np.log(transformed)
-         
-        return 0
+     
     
     def drop_col(train_data,col_name):
         print(col_name)
