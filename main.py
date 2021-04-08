@@ -82,7 +82,11 @@ class Main:
             generate_csv(x_pred,'outputs/xgb')
         # print(xgb_pred)
         
-
+        
+        # Cross validation
+        # PCA- Dimensionality Reduction
+        # grid search
+        
 if __name__ == "__main__":
      
     Main()
