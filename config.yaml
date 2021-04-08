@@ -1,0 +1,36 @@
+
+
+# Column Names
+col_names: ['Alley','PoolQC','Fence','MiscFeature','BsmtFinSF2','BsmtFinSF1','TotalBsmtSF','GrLivArea','Id']
+
+
+# Use pickle files
+# model: ____.pkl
+
+
+# Models - Choose from 'Regression, XGBoost'
+model_name: 'Regression'
+
+# XGBoost parameters
+colsample_bytree: 0.5 
+gamma: 0.4 
+random_state: 7
+learning_rate: 0.05
+max_depth: 3 
+n_estimators: 2500
+reg_lambda: 0.8
+subsample: 0.5
+top_k: 30
+
+# colsample_bytree: 0.5 
+# gamma: 0.4 
+# learning_rate: 0.05
+# max_depth: 3 
+# n_estimators: 2200
+# reg_lambda: 0.8
+# subsample: 0.5
+# top_k: 50
+# mse= 0.020501893445916138
+
+# mse= 0.020487427627977787 -- n_es==2500
+# mse= 0.020290381388498008 -- depth =3
